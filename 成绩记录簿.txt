@@ -1,0 +1,269 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+struct student {     //定义结构体，保存学生的姓名，学号，分数
+	char id[10];     //学号
+	char name[10];   //姓名
+	int score;       //分数
+	struct student *next;  //定义结构体指针
+};
+typedef struct student Stu;
+Stu *s = 0;
+int n = 0;
+void add() {
+	Stu *p;         //定义指针
+	if (s == 0) {
+		s = (Stu *)malloc(sizeof(Stu));  //动态分配指针内存
+		p = s;
+	}
+	else {
+		p = s;
+		while (p->next != 0) p = p->next;
+		p->next = (Stu *)malloc(sizeof(Stu));
+		p = p->next;
+	}
+	printf("输入新的学号: ");
+	scanf("%s", p->id);
+	printf("输入新的姓名: ");
+	scanf("%s", p->name);
+	printf("输入新的分数: ");
+	scanf("%d", &(p->score));
+	printf("\n该记录已经添加到文件:\n");
+	printf("学号      姓名      分数\n");
+	printf("%s %s %d\n", p->id, p->name, p->score);  //指针分别指向学号，姓名，分数
+	p->next = 0;
+	n++;
+}
+void edit() {
+	if (s == 0) {
+		printf("无可用的记录.\n");
+		return;
+	}
+	Stu *p;
+	char id[10];
+	printf("输入要编辑的学生学号: ");
+	scanf("%s", id);
+	p = s;
+	while (p != 0) {
+		if (strcmp(p->id, id) == 0) break;
+		p = p->next;
+	}
+	if (p == 0) printf("无分数记录\n");
+	else {
+		int c;
+		printf("该记录已经存在\n");
+		printf("学号     姓名     分数\n");
+		printf("%s %s %d\n", p->id, p->name, p->score);
+		printf("1.学号  2.姓名  3.分数  4.退出\n");
+		printf("选择操作: ");
+		scanf("%d", &c);
+		if (c == 1) {
+			printf("输入新学号: ");
+			scanf("%s", p->id);
+		}
+		else if (c == 2) {
+			printf("输入新姓名: ");
+			scanf("%s", p->name);
+		}
+		else if (c == 3) {
+			printf("输入新分数: ");
+			scanf("%d", &(p->score));
+		}
+		else return;
+		printf("The edited record:\n");
+		printf("学号     姓名      分数\n");
+		printf("%s %s %d\n", p->id, p->name, p->score);
+	}
+}
+void search() {
+	if (s == 0) {
+		printf("无可用记录\n");
+		return;
+	}
+	Stu *p;
+	p = s;
+	int c;
+	printf("1.根据学号查询  2.根据姓名查询\n");
+	printf("请选择查询方式: ");
+	scanf("%d", &c);
+	if (c == 1) {
+		char id[10];
+		printf("请输入学生学号: ");
+		scanf("%s", id);
+		while (p != 0) {
+			if (strcmp(p->id, id) == 0) break;
+			p = p->next;
+		}
+		if (p == 0) printf("无此记录\n");
+		else {
+			printf("该记录已存在\n");
+			printf("学号      姓名      分数\n");
+			printf("%s %s %d\n", p->id, p->name, p->score);
+		}
+	}
+	else if (c == 2) {
+		char name[10];
+		printf("输入学生姓名: ");
+		scanf("%s", name);
+		while (p != 0) {
+			if (strcmp(p->name, name) == 0) break;
+			p = p->next;
+		}
+		if (p == 0) printf("无此记录\n");
+		else {
+			printf("该记录已存在\n");
+			printf("学号      姓名      分数\n");
+			printf("%s %s %d\n", p->id, p->name, p->score);
+		}
+	}
+	else printf("Invalid option.\n");
+}
+void display() {
+	if (s == 0) {
+		printf("无此记录\n");
+		return;
+	}
+	Stu *p;
+	p = s;
+	printf("学号     姓名      分数\n");
+	while (p != 0) {
+		printf("%s %s %d\n", p->id, p->name, p->score);
+		p = p->next;
+	}
+}
+void save() {
+	if (s == 0) {
+		printf("无可用的记录\n");
+		return;
+	}
+	char filename[100];
+	printf("请输入你想保存的文件名（txt文件）: ");
+	scanf("%s", filename);
+	FILE *p;
+	if ((p = fopen(filename, "w")) == 0) {
+		perror("无法打开文件\n");
+		return;
+	}
+	Stu *q;
+	q = s;
+	while (q != 0) {
+		fprintf(p, "%s %s %d\n", q->id, q->name, q->score);
+		q = q->next;
+	}
+	fclose(p);
+}
+void load() {
+	char filename[100];
+	int m;
+	printf("请输入已有的文件名（txt文件）: ");
+	scanf("%s", filename);
+	FILE *p;
+	if ((p = fopen(filename, "r")) == 0) {
+		perror("无法打开文件\n");
+		return;
+	}
+	Stu *q, *r;
+	while (s != 0) {
+		q = s->next;
+		free(s);
+		s = q;
+	}
+	n = 0;
+	while (1) {
+		if (s == 0) {
+			s = (Stu *)malloc(sizeof(Stu));
+			q = s;
+		}
+		else {
+			q->next = (Stu *)malloc(sizeof(Stu));
+			r = q;
+			q = q->next;
+		}
+		m = fscanf(p, "%s %s %d", q->id, q->name, &(q->score));
+		if (m == -1) {
+			if (q == s) {
+				free(s);
+				s = 0;
+			}
+			else {
+				free(q);    //释放内存
+				r->next = 0;
+			}
+			break;
+		}
+		n++;
+	}
+	fclose(p);          //关闭指针
+	display();
+}
+void statistics() {
+	if (s == 0) {
+		printf("无可用的记录\n");
+		return;
+	}
+	Stu *p, **q;
+	int i = 0, j;
+	q = (Stu **)calloc(sizeof(Stu *), n);
+	p = s;
+	while (p != 0) {
+		j = i - 1;
+		while (j >= 0 && p->score<q[j]->score) {
+			q[j + 1] = q[j];
+			j--;
+		}
+		q[j + 1] = p;
+		p = p->next;
+		i++;
+	}
+	i = 0;
+	printf("\n60分以下的学生名单:\n");
+	printf("学号      姓名      分数\n");
+	while (i<n&&q[i]->score<60) {
+		printf("%s %s %d\n", q[i]->id, q[i]->name, q[i]->score);
+		i++;
+	}
+	printf("\n60到79分的学生名单:\n");
+	printf("学号     姓名      分数\n");
+	while (i<n&&q[i]->score<80) {
+		printf("%s %s %d\n", q[i]->id, q[i]->name, q[i]->score);
+		i++;
+	}
+	printf("\n80到89分的学生名单:\n");
+	printf("学号      姓名      分数\n");
+	while (i<n&&q[i]->score<90) {
+		printf("%s %s %d\n", q[i]->id, q[i]->name, q[i]->score);
+		i++;
+	}
+	printf("\n90分和90分以上的学生名单:\n");
+	printf("学号      姓名      分数\n");
+	while (i<n&&q[i]->score >= 90) {
+		printf("%s %s %d\n", q[i]->id, q[i]->name, q[i]->score);
+		i++;
+	}
+	free(q);
+}
+int main() {
+	int i;
+	do {
+		printf(" 1.添加  2.编辑  3.保存  4.打开已有文件\n 5.搜索  6.显示  7.统计  8.退出\n");
+		printf("选择操作: ");
+		scanf("%d", &i);
+		if (i == 1) add();
+		else if (i == 2) edit();
+		else if (i == 3) save();
+		else if (i == 4) load();
+		else if (i == 5) search();
+		else if (i == 6) display();
+		else if (i == 7) statistics();
+		else {
+			Stu* p;
+			while (s != 0) {
+				p = s->next;
+				free(s);
+				s = p;
+			}
+			break;
+		}
+	} while (1);
+	return 0;
+}
